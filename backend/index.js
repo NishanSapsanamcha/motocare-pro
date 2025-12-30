@@ -7,7 +7,7 @@ import authRoutes from "./route/auth/authRoutes.js";
 import userRoutes from "./route/user/userRoutes.js";
 
 // DB
-import pool from "./database/db.js";
+import pool from "../backend/database/db.js";
 
 dotenv.config();
 

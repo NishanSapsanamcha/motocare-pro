@@ -1,6 +1,6 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import pool from "../../database/db.js";
+import pool from "../../../backend/database/db.js";
 
 /**
  * REGISTER USER
