@@ -1,6 +1,6 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import pool from "../../../backend/database/db.js";
+import pool from "../../database/db.js";
 
 /**
  * REGISTER USER
@@ -8,17 +8,17 @@ import pool from "../../../backend/database/db.js";
  */
 export const register = async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    const { fullName, email, password } = req.body;
 
     // 1. Validate input
-    if (!name || !email || !password) {
+    if (!fullName || !email || !password) {
       return res.status(400).json({ message: "All fields are required" });
     }
 
     // 2. Check if user already exists
     const userExists = await pool.query(
-      "SELECT * FROM users WHERE email = $1",
-      [email]
+      "SELECT id FROM users WHERE email = $1",
+      [email.toLowerCase()]
     );
 
     if (userExists.rows.length > 0) {
@@ -31,10 +31,10 @@ export const register = async (req, res) => {
 
     // 4. Insert user
     const newUser = await pool.query(
-      `INSERT INTO users (name, email, password)
+      `INSERT INTO users (full_name, email, password)
        VALUES ($1, $2, $3)
-       RETURNING id, name, email`,
-      [name, email, hashedPassword]
+       RETURNING id, full_name, email`,
+      [fullName, email.toLowerCase(), hashedPassword]
     );
 
     // 5. Generate JWT
@@ -47,11 +47,15 @@ export const register = async (req, res) => {
     res.status(201).json({
       message: "User registered successfully",
       token,
-      user: newUser.rows[0],
+      user: {
+        id: newUser.rows[0].id,
+        fullName: newUser.rows[0].full_name,
+        email: newUser.rows[0].email,
+      },
     });
   } catch (error) {
     console.error("Register error:", error);
-    res.status(500).json({ message: "Server error" });
+    return res.status(500).json({ message: error.message });
   }
 };
 
@@ -70,8 +74,8 @@ export const login = async (req, res) => {
 
     // 2. Check user
     const result = await pool.query(
-      "SELECT * FROM users WHERE email = $1",
-      [email]
+      "SELECT id, full_name, email, password FROM users WHERE email = $1",
+      [email.toLowerCase()]
     );
 
     if (result.rows.length === 0) {
@@ -99,7 +103,7 @@ export const login = async (req, res) => {
       token,
       user: {
         id: user.id,
-        name: user.name,
+        fullName: user.full_name,
         email: user.email,
       },
     });
