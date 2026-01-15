@@ -7,7 +7,7 @@ import authRoutes from "./route/auth/authRoutes.js";
 import userRoutes from "./route/user/userRoutes.js";
 
 // DB
-import pool from "../backend/database/db.js";
+import sequelize from "../backend/database/db.js";
 
 dotenv.config();
 
@@ -29,11 +29,23 @@ app.use("/api/users", userRoutes);
 
 // Test route
 app.get("/", (req, res) => {
-  res.send("Motocare Pro API is running 🚀");
+  res.send("Motocare Pro API is running ");
 });
 
 // Server
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+
+(async () => {
+  try {
+    await sequelize.authenticate();
+    console.log("Database connected successfuly");
+    // await sequelize.sync();
+
+    app.listen(PORT, () => {
+      console.log(`Server running on port ${PORT}`);
+    });
+  } catch (error) {
+    console.error(" DB connection failed:", error);
+    process.exit(1);
+  }
+})();

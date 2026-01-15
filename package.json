@@ -1,5 +1,8 @@
 {
   "dependencies": {
-    "react-router-dom": "^7.11.0"
+    "axios": "^1.13.2",
+    "react-data-table-component": "^7.7.0",
+    "react-router-dom": "^7.11.0",
+    "zod": "^4.3.5"
   }
 }

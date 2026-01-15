@@ -1,104 +1,90 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import pool from "../../database/db.js";
+import User from "../../models/user/Users.js";
+
+function requireEnv(name) {
+  const v = process.env[name];
+  if (!v) throw new Error(`${name} is missing in .env`);
+  return v;
+}
 
 /**
- * REGISTER USER
+ * REGISTER
  * POST /api/auth/register
  */
 export const register = async (req, res) => {
   try {
     const { fullName, email, password } = req.body;
 
-    // 1. Validate input
     if (!fullName || !email || !password) {
       return res.status(400).json({ message: "All fields are required" });
     }
 
-    // 2. Check if user already exists
-    const userExists = await pool.query(
-      "SELECT id FROM users WHERE email = $1",
-      [email.toLowerCase()]
-    );
+    const normalizedEmail = String(email).trim().toLowerCase();
 
-    if (userExists.rows.length > 0) {
+    const exists = await User.findOne({ where: { email: normalizedEmail } });
+    if (exists) {
       return res.status(409).json({ message: "User already exists" });
     }
 
-    // 3. Hash password
-    const saltRounds = 10;
-    const hashedPassword = await bcrypt.hash(password, saltRounds);
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-    // 4. Insert user
-    const newUser = await pool.query(
-      `INSERT INTO users (full_name, email, password)
-       VALUES ($1, $2, $3)
-       RETURNING id, full_name, email`,
-      [fullName, email.toLowerCase(), hashedPassword]
-    );
+    const newUser = await User.create({
+      full_name: fullName.trim(),
+      email: normalizedEmail,
+      password: hashedPassword,
+    });
 
-    // 5. Generate JWT
-    const token = jwt.sign(
-      { id: newUser.rows[0].id },
-      process.env.JWT_SECRET,
-      { expiresIn: process.env.JWT_EXPIRES_IN }
-    );
+    const JWT_SECRET = requireEnv("JWT_SECRET");
+    const expiresIn = process.env.JWT_EXPIRES_IN || "7d";
 
-    res.status(201).json({
+    const token = jwt.sign({ id: newUser.id }, JWT_SECRET, { expiresIn });
+
+    return res.status(201).json({
       message: "User registered successfully",
       token,
       user: {
-        id: newUser.rows[0].id,
-        fullName: newUser.rows[0].full_name,
-        email: newUser.rows[0].email,
+        id: newUser.id,
+        fullName: newUser.full_name,
+        email: newUser.email,
       },
     });
   } catch (error) {
     console.error("Register error:", error);
-    return res.status(500).json({ message: error.message });
+    return res.status(500).json({ message: error.message || "Server error" });
   }
 };
 
 /**
- * LOGIN USER
+ * LOGIN
  * POST /api/auth/login
  */
 export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // 1. Validate input
     if (!email || !password) {
       return res.status(400).json({ message: "Email and password required" });
     }
 
-    // 2. Check user
-    const result = await pool.query(
-      "SELECT id, full_name, email, password FROM users WHERE email = $1",
-      [email.toLowerCase()]
-    );
+    const normalizedEmail = String(email).trim().toLowerCase();
 
-    if (result.rows.length === 0) {
+    const user = await User.findOne({ where: { email: normalizedEmail } });
+    if (!user) {
       return res.status(401).json({ message: "Invalid credentials" });
     }
 
-    const user = result.rows[0];
-
-    // 3. Compare password
     const isMatch = await bcrypt.compare(password, user.password);
-
     if (!isMatch) {
       return res.status(401).json({ message: "Invalid credentials" });
     }
 
-    // 4. Generate JWT
-    const token = jwt.sign(
-      { id: user.id },
-      process.env.JWT_SECRET,
-      { expiresIn: process.env.JWT_EXPIRES_IN }
-    );
+    const JWT_SECRET = requireEnv("JWT_SECRET");
+    const expiresIn = process.env.JWT_EXPIRES_IN || "7d";
 
-    res.status(200).json({
+    const token = jwt.sign({ id: user.id }, JWT_SECRET, { expiresIn });
+
+    return res.status(200).json({
       message: "Login successful",
       token,
       user: {
@@ -109,6 +95,6 @@ export const login = async (req, res) => {
     });
   } catch (error) {
     console.error("Login error:", error);
-    res.status(500).json({ message: "Server error" });
+    return res.status(500).json({ message: error.message || "Server error" });
   }
 };
