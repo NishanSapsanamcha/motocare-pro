@@ -18,6 +18,42 @@
   box-shadow: 0 30px 80px rgba(0, 0, 0, 0.18);
 }
 
+.auth-card-single{
+  display: flex;
+  justify-content: center;
+}
+
+.auth-single-col{
+  width: min(420px, 100%);
+  margin: 0 auto;
+}
+
+.auth-card-split{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  align-items: center;
+}
+
+.auth-brand-col{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.auth-form-col{
+  width: min(420px, 100%);
+  margin: 0 auto;
+}
+
+.auth-brand-row{
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
 .auth-logo {
   width: 90px;
   height: 90px;
@@ -46,6 +82,28 @@
 .input-group-text {
   background: #ffffff;
   border-radius: 10px 0 0 10px;
+}
+
+.password-toggle-btn {
+  border: 1px solid #d0d7de;
+  border-left: none;
+  background: #ffffff;
+  color: #6c757d;
+  padding: 0 12px;
+  border-radius: 0 10px 10px 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.password-toggle-btn:hover {
+  color: #ff7a18;
+}
+
+.password-toggle-btn:focus {
+  outline: none;
+  box-shadow: 0 0 0 0.2rem rgba(255, 122, 24, 0.25);
 }
 
 .btn-primary {
@@ -79,5 +137,13 @@ a.text-primary:hover {
   .auth-logo {
     width: 70px;
     height: 70px;
+  }
+
+  .auth-card-split{
+    grid-template-columns: 1fr;
+  }
+
+  .auth-brand-col{
+    justify-content: center;
   }
 }

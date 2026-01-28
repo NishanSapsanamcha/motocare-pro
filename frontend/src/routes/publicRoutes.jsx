@@ -4,8 +4,19 @@ import { getToken } from "../utils/auth";
 const PublicRoutes = () => {
   const token = getToken();
 
-  // If already logged in, prevent access to login/register
-  if (token) {
+  let user = null;
+  try {
+    const str = localStorage.getItem("user");
+    user = str ? JSON.parse(str) : null;
+  } catch {
+    user = null;
+  }
+
+  // If already logged in, route to respective dashboard
+  if (token && user) {
+    if (user.role === "ADMIN") {
+      return <Navigate to="/admin/dashboard" replace />;
+    }
     return <Navigate to="/dashboard" replace />;
   }
 

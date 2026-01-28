@@ -1,11 +1,14 @@
-import React from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import logo from "../../assets/logo.png";
+import serviceImg from "../../assets/dashboard/service.png";
 import "./Dashboard.css";
 import { removeAuth } from "../../utils/auth";
+import DashboardLayout from "./DashboardLayout";
+import api from "../../utils/api";
 
 export default function Dashboard() {
   const navigate = useNavigate();
+  const [appointments, setAppointments] = useState([]);
 
   const userStr = localStorage.getItem("user");
   let user = null;
@@ -21,125 +24,152 @@ export default function Dashboard() {
     navigate("/landing", { replace: true });
   };
 
+  useEffect(() => {
+    let active = true;
+    const fetchAppointments = async () => {
+      try {
+        const res = await api.get("/users/appointments");
+        if (active) {
+          setAppointments(Array.isArray(res.data.data) ? res.data.data : []);
+        }
+      } catch {
+        if (active) {
+          setAppointments([]);
+        }
+      }
+    };
+    fetchAppointments();
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const { passedDays, remainingDays, aLabel, bLabel } = useMemo(() => {
+    const completionDate = getLatestCompletionDate(appointments);
+    if (!completionDate) {
+      return {
+        passedDays: 0,
+        remainingDays: 90,
+        aLabel: "90 Days Remaining",
+        bLabel: "0 Days Passed",
+      };
+    }
+
+    const msPerDay = 1000 * 60 * 60 * 24;
+    const diffMs = new Date() - completionDate;
+    const rawPassed = diffMs > 0 ? Math.floor(diffMs / msPerDay) : 0;
+    const clampedPassed = Math.min(Math.max(rawPassed, 0), 90);
+    const remaining = Math.max(90 - clampedPassed, 0);
+    return {
+      passedDays: clampedPassed,
+      remainingDays: remaining,
+      aLabel: `${remaining} Days Remaining`,
+      bLabel: `${clampedPassed} Days Passed`,
+    };
+  }, [appointments]);
+
   return (
-    <div className="dash">
-      {/* TOP NAV */}
-      <header className="dash-top">
-        <div className="dash-top-left">
-          <img src={logo} alt="Motocare Pro" className="dash-logo" />
-          <span className="dash-brand">Motocare Pro</span>
-        </div>
+    <DashboardLayout active="dashboard" fullName={fullName} onLogout={handleLogout}>
+      <div className="dash-main-grid">
+        {/* LEFT MAIN */}
+        <section className="dash-left">
+          <div className="dash-title">My Dashboard</div>
+          <div className="dash-subtitle">Choose a service you want</div>
 
-        <nav className="dash-top-nav">
-          <Link to="#" className="dash-top-link">Home</Link>
-          <Link to="#" className="dash-top-link">Contact Us</Link>
-
-          <button className="dash-icon-btn" aria-label="notifications">
-            <i className="bi bi-bell" />
-          </button>
-          <button className="dash-avatar" aria-label="profile">
-            <i className="bi bi-person" />
-          </button>
-        </nav>
-      </header>
-
-      {/* BODY */}
-      <div className="dash-body">
-        {/* SIDEBAR */}
-        <aside className="dash-side">
-          <div className="dash-user">
-            <div className="dash-user-pic">
-              <i className="bi bi-person-fill" />
-            </div>
-            <div>
-              <div className="dash-user-hi">Welcome,</div>
-              <div className="dash-user-name">{fullName}</div>
+          <div className="dash-card">
+            <div className="dash-card-grid">
+              <ServiceCard title="Servicing" imgSrc={serviceImg} to="/dashboard/servicing" />
             </div>
           </div>
+        </section>
 
-          <div className="dash-divider" />
+        {/* RIGHT PANEL */}
+        <section className="dash-right">
+          <div className="dash-select-card">
+            <select className="form-select">
+              <option>Please add your Bike / Scooter</option>
+            </select>
+          </div>
 
-          <div className="dash-menu">
-            <MenuItem icon="bi-speedometer2" label="Dashboard" active />
-            <MenuItem icon="bi-wrench-adjustable" label="Servicing" />
-            <MenuItem icon="bi-bicycle" label="My Bikes" />
-            <MenuItem icon="bi-award" label="Rewards" />
-
-            {/* Logout */}
-            <MenuItem
-              icon="bi-box-arrow-right"
-              label="Logout"
-              danger
-              onClick={handleLogout}
+          <div className="dash-analytics">
+            <div className="dash-analytics-title">Servicing</div>
+            <Donut
+              size={190}
+              thickness={18}
+              aLabel={aLabel}
+              bLabel={bLabel}
+              aValue={remainingDays}
+              bValue={passedDays}
+              aColor="#2f80ed"
+              bColor="#ff5b7f"
             />
           </div>
-        </aside>
-
-        {/* MAIN CONTENT */}
-        <main className="dash-main">
-          <div className="dash-main-grid">
-            {/* LEFT MAIN */}
-            <section className="dash-left">
-              <div className="dash-title">My Dashboard</div>
-              <div className="dash-subtitle">Choose a service you want</div>
-
-              <div className="dash-card">
-                <div className="dash-card-grid">
-                  <ServiceCard title="Servicing" icon="bi-tools" />
-                </div>
-              </div>
-            </section>
-
-            {/* RIGHT PANEL */}
-            <section className="dash-right">
-              <div className="dash-select-card">
-                <select className="form-select">
-                  <option>Please add your Bike / Scooter</option>
-                </select>
-              </div>
-
-              <div className="dash-analytics">
-                <div className="dash-analytics-title">Servicing</div>
-                <Donut
-                  size={190}
-                  thickness={18}
-                  aLabel="0 Days Remaining"
-                  bLabel="90 Days Passed"
-                  aValue={0}
-                  bValue={90}
-                  aColor="#2f80ed"
-                  bColor="#ff5b7f"
-                />
-              </div>
-            </section>
-          </div>
-        </main>
+        </section>
       </div>
-    </div>
+    </DashboardLayout>
   );
 }
 
 /* small components */
-function MenuItem({ icon, label, active, onClick, danger }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`dash-menu-item ${active ? "active" : ""} ${danger ? "danger" : ""}`}
-    >
-      <i className={`bi ${icon}`} />
-      <span>{label}</span>
-    </button>
-  );
-}
+const getCompletionDate = (appointment) => {
+  const history = Array.isArray(appointment?.status_history) ? appointment.status_history : [];
+  let latest = null;
+  for (const entry of history) {
+    if (entry?.to !== "COMPLETED" || !entry?.at) continue;
+    const parsed = new Date(entry.at);
+    if (Number.isNaN(parsed.getTime())) continue;
+    if (!latest || parsed > latest) {
+      latest = parsed;
+    }
+  }
+  if (latest) return latest;
 
-function ServiceCard({ title, icon }) {
-  return (
-    <button className="service-card" type="button">
+  if (appointment?.status === "COMPLETED") {
+    const updated = new Date(appointment.updated_at);
+    if (!Number.isNaN(updated.getTime())) return updated;
+    const preferred = new Date(appointment.preferred_date);
+    if (!Number.isNaN(preferred.getTime())) return preferred;
+  }
+  return null;
+};
+
+const getLatestCompletionDate = (appointments) => {
+  let latest = null;
+  for (const appt of appointments || []) {
+    const completedAt = getCompletionDate(appt);
+    if (!completedAt) continue;
+    if (!latest || completedAt > latest) {
+      latest = completedAt;
+    }
+  }
+  return latest;
+};
+
+function ServiceCard({ title, icon, imgSrc, to }) {
+  const content = (
+    <>
       <div className="service-ic">
-        <i className={`bi ${icon}`} />
+        {imgSrc ? (
+          <img className="service-ic-img" src={imgSrc} alt="" aria-hidden="true" />
+        ) : (
+          <i className={`bi ${icon}`} />
+        )}
       </div>
       <div className="service-title">{title}</div>
+    </>
+  );
+
+  if (to) {
+    return (
+      <Link className="service-card" to={to}>
+        {content}
+      </Link>
+    );
+  }
+
+  return (
+    <button className="service-card" type="button">
+      {content}
     </button>
   );
 }

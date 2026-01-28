@@ -99,7 +99,7 @@ export default function LandingPage() {
       <section className="lp-warranty">
         <div className="lp-container">
           <h2 className="lp-section-title">Service Warranty</h2>
-          <p className="lp-section-sub">Service at your home or office, fair and transparent pricing</p>
+          <p className="lp-section-sub">Book from your home or office, fair and transparent pricing</p>
 
           <div className="lp-warranty-grid">
             <div className="lp-warranty-card">
@@ -187,9 +187,9 @@ export default function LandingPage() {
 
           <div className="lp-footer-col">
             <div className="lp-footer-head">Contact</div>
-            <div className="lp-footer-item">Kathmandu, Nepal</div>
-            <div className="lp-footer-item">+977 9810111213</div>
-            <div className="lp-footer-item">support@motocarepro.com</div>
+            <div className="lp-footer-item">Budhanilkantha-2, Kathmandu</div>
+            <div className="lp-footer-item">+977 9800000000</div>
+            <div className="lp-footer-item">support@motocare-pro.com</div>
           </div>
 
           <div className="lp-footer-col">

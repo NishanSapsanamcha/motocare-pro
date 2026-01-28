@@ -2,11 +2,12 @@
   "name": "motocare-pro",
   "version": "1.0.0",
   "description": "moto",
+  "type": "module",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
     "dev": "nodemon index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest"
   },
   "repository": {
     "type": "module",
@@ -24,10 +25,15 @@
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
     "express": "^5.2.1",
+    "jest": "^30.2.0",
     "jsonwebtoken": "^9.0.3",
     "multer": "^2.0.2",
+    "nodemailer": "^6.10.1",
     "nodemon": "^3.1.11",
     "pg": "^8.16.3",
-    "sequelize": "^6.37.7"
+    "sequelize": "^6.37.7",
+    "sequelize-mock": "^0.10.2",
+    "supertest": "^7.2.2",
+    "zod": "^4.3.6"
   }
 }

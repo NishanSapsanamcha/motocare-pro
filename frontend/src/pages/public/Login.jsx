@@ -1,7 +1,9 @@
 import { useMemo, useState } from "react";
 import logo from "../../assets/logo.png";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { loginSchema } from "../../schema/auth.schema";
+import api from "../../utils/api";
+import { setAdminUser, setToken, setUser } from "../../utils/auth";
 import "./Login.css";
 
 export default function Login({ onSwitch }) {
@@ -13,8 +15,10 @@ export default function Login({ onSwitch }) {
   const [error, setError] = useState("");
   const [fieldErrors, setFieldErrors] = useState({});
 
+  const location = useLocation();
   const navigate = useNavigate();
   const year = useMemo(() => new Date().getFullYear(), []);
+  const isAdminLogin = location.pathname.startsWith("/admin");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -35,25 +39,32 @@ export default function Login({ onSwitch }) {
     try {
       setLoading(true);
 
-      const res = await fetch("http://localhost:4000/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(parsed.data),
-      });
+      const endpoint = isAdminLogin ? "/admin/auth/login" : "/auth/login";
+      const res = await api.post(endpoint, parsed.data);
+      const { token, user, admin } = res.data || {};
+      const authUser = user || admin;
 
-      const data = await res.json();
-
-      if (!res.ok) {
-        setError(data.message || "Login failed");
+      if (!token || !authUser) {
+        setError("Invalid response from server");
         return;
       }
 
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("user", JSON.stringify(data.user));
+      setToken(token);
+      setUser(authUser);
+      if (authUser.role === "ADMIN") {
+        setAdminUser(authUser);
+      }
 
-      navigate("/dashboard", { replace: true });
-    } catch {
-      setError("Network error. Please try again.");
+      // Route based on role
+      if (authUser.role === "ADMIN") {
+        navigate("/admin/dashboard", { replace: true });
+      } else {
+        navigate("/dashboard", { replace: true });
+      }
+    } catch (err) {
+      const msg =
+        err?.response?.data?.message || err?.message || "Login failed. Please try again.";
+      setError(msg);
     } finally {
       setLoading(false);
     }
@@ -74,14 +85,14 @@ export default function Login({ onSwitch }) {
             </p>
 
             <div className="d-none d-md-block">
-              <p className="small text-muted">c {year} Motocare Pro. All rights reserved.</p>
+              <p className="small text-muted">© {year} Motocare Pro. All rights reserved.</p>
             </div>
           </div>
 
           {/* RIGHT CONTENT */}
           <div className="col-md-6">
             <h3 className="fw-bold mb-1 text-center text-md-start">Welcome back</h3>
-            <p className="text-muted mb-4 text-center text-md-start">Login to continue</p>
+            <p className="text-muted mb-4 text-center text-md-start">Login to your account</p>
 
             {error && <div className="alert alert-danger py-2">{error}</div>}
 
@@ -97,7 +108,7 @@ export default function Login({ onSwitch }) {
                 <input
                   type="email"
                   className={`form-control ${fieldErrors.email ? "is-invalid" : ""}`}
-                  placeholder="you@example.com"
+                  placeholder="youremail@example.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                 />
@@ -154,6 +165,23 @@ export default function Login({ onSwitch }) {
                 {loading ? "Logging in..." : "Login"}
               </button>
             </form>
+
+            <p className="text-center mt-3">
+              Don't have an account?{" "}
+              {onSwitch ? (
+                <button
+                  type="button"
+                  className="btn btn-link p-0"
+                  onClick={onSwitch}
+                >
+                  Register here
+                </button>
+              ) : (
+                <Link to="/register" className="btn btn-link p-0">
+                  Register here
+                </Link>
+              )}
+            </p>
           </div>
         </div>
       </div>
