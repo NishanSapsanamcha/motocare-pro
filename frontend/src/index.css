@@ -1,4 +1,41 @@
+/* ============================================
+   RESPONSIVE BASE STYLES - Mobile First Approach
+   ============================================
+   Breakpoints:
+   - Mobile: 360px – 480px (base styles)
+   - Tablet: 768px – 1024px
+   - Desktop: ≥1280px
+   ============================================ */
+
 :root {
+  /* Brand Colors */
+  --brand: #ff7a18;
+  --brand-dark: #ff4d00;
+  --navy: #071827;
+  --bg: #f5f7fa;
+  --card: #ffffff;
+  --muted: #6b7785;
+  --line: rgba(0,0,0,.08);
+  
+  /* Responsive Spacing */
+  --space-xs: 0.25rem;
+  --space-sm: 0.5rem;
+  --space-md: 1rem;
+  --space-lg: 1.5rem;
+  --space-xl: 2rem;
+  
+  /* Responsive Font Sizes */
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.25rem;
+  --text-2xl: 1.5rem;
+  --text-3xl: 1.875rem;
+  
+  /* Touch Target Minimum */
+  --touch-target: 44px;
+  
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
@@ -11,6 +48,16 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* Global Box Sizing */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+/* Prevent Horizontal Overflow */
+html {
+  overflow-x: hidden;
 }
 
 a {
@@ -28,11 +75,28 @@ body {
   place-items: center;
   min-width: 320px;
   min-height: 100vh;
+  overflow-x: hidden;
 }
 
 h1 {
-  font-size: 3.2em;
+  font-size: clamp(1.75rem, 5vw, 3.2rem);
   line-height: 1.1;
+}
+
+h2 {
+  font-size: clamp(1.5rem, 4vw, 2.5rem);
+  line-height: 1.2;
+}
+
+h3 {
+  font-size: clamp(1.25rem, 3vw, 1.875rem);
+  line-height: 1.3;
+}
+
+/* Responsive Images */
+img {
+  max-width: 100%;
+  height: auto;
 }
 
 button {
@@ -45,6 +109,7 @@ button {
   background-color: #1a1a1a;
   cursor: pointer;
   transition: border-color 0.25s;
+  min-height: var(--touch-target);
 }
 button:hover {
   border-color: #646cff;
@@ -52,6 +117,80 @@ button:hover {
 button:focus,
 button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
+}
+
+/* Responsive Tables */
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Utility Classes for Responsive Layout */
+.container-responsive {
+  width: 100%;
+  max-width: 100%;
+  padding-left: var(--space-md);
+  padding-right: var(--space-md);
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Hide on Mobile */
+.hide-mobile {
+  display: none;
+}
+
+/* Show on Mobile Only */
+.show-mobile {
+  display: block;
+}
+
+/* Tablet Breakpoint */
+@media (min-width: 768px) {
+  :root {
+    --space-md: 1.25rem;
+    --space-lg: 2rem;
+    --space-xl: 2.5rem;
+  }
+  
+  .container-responsive {
+    max-width: 720px;
+    padding-left: var(--space-lg);
+    padding-right: var(--space-lg);
+  }
+  
+  .hide-mobile {
+    display: block;
+  }
+  
+  .show-mobile {
+    display: none;
+  }
+  
+  .hide-tablet {
+    display: none;
+  }
+}
+
+/* Desktop Breakpoint */
+@media (min-width: 1280px) {
+  :root {
+    --space-lg: 2rem;
+    --space-xl: 3rem;
+  }
+  
+  .container-responsive {
+    max-width: 1200px;
+  }
+  
+  .hide-tablet {
+    display: block;
+  }
+  
+  .hide-desktop {
+    display: none;
+  }
 }
 
 @media (prefers-color-scheme: light) {

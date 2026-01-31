@@ -13,6 +13,7 @@ import SplashScreen from "../public/SplashScreen";
 
 export default function DashboardLayout({ active, fullName, onLogout, children }) {
   const [openNotifications, setOpenNotifications] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [appointments, setAppointments] = useState([]);
   const [loadingAppointments, setLoadingAppointments] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
@@ -98,12 +99,45 @@ export default function DashboardLayout({ active, fullName, onLogout, children }
     }, 250);
   };
 
+  // Close mobile menu when clicking a link
+  const closeMobileMenu = () => {
+    setMobileMenuOpen(false);
+  };
+
+  // Close mobile menu on window resize above mobile breakpoint
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 900) {
+        setMobileMenuOpen(false);
+      }
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
   return (
     <div className="dash">
       {loggingOut && <SplashScreen label="Signing out..." />}
+      {/* Mobile Menu Overlay */}
+      {mobileMenuOpen && (
+        <div 
+          className="dash-mobile-overlay" 
+          onClick={closeMobileMenu}
+          aria-hidden="true"
+        />
+      )}
       {/* TOP NAV */}
       <header className="dash-top">
         <div className="dash-top-left">
+          {/* Hamburger button for mobile */}
+          <button
+            type="button"
+            className="dash-hamburger"
+            aria-label="Toggle menu"
+            onClick={() => setMobileMenuOpen((prev) => !prev)}
+          >
+            <i className={`bi ${mobileMenuOpen ? "bi-x-lg" : "bi-list"}`} />
+          </button>
           <img src={logo} alt="Motocare Pro" className="dash-logo" />
           <span className="dash-brand">Motocare Pro</span>
         </div>
@@ -162,7 +196,7 @@ export default function DashboardLayout({ active, fullName, onLogout, children }
       {/* BODY */}
       <div className="dash-body">
         {/* SIDEBAR */}
-        <aside className="dash-side">
+        <aside className={`dash-side ${mobileMenuOpen ? "dash-side-open" : ""}`}>
           <div className="dash-user">
             <div className="dash-user-pic">
               {avatarSrc ? (
@@ -185,30 +219,35 @@ export default function DashboardLayout({ active, fullName, onLogout, children }
               label="Dashboard"
               active={active === "dashboard"}
               to="/dashboard"
+              onClick={closeMobileMenu}
             />
             <MenuItem
               imgSrc={serviceImg}
               label="Servicing"
               active={active === "servicing"}
               to="/dashboard/servicing"
+              onClick={closeMobileMenu}
             />
             <MenuItem
               imgSrc={motorImg}
               label="My Bikes"
               active={active === "bikes"}
               to="/dashboard/bikes"
+              onClick={closeMobileMenu}
             />
             <MenuItem
               imgSrc={appointmentImg}
               label="My Appointments"
               active={active === "appointments"}
               to="/dashboard/appointments"
+              onClick={closeMobileMenu}
             />
             <MenuItem
               imgSrc={awardImg}
               label="Rewards"
               active={active === "rewards"}
               to="/dashboard/rewards"
+              onClick={closeMobileMenu}
             />
 
             {/* Logout */}
@@ -235,7 +274,7 @@ function MenuItem({ icon, imgSrc, label, active, onClick, danger, to }) {
 
   if (to) {
     return (
-      <Link to={to} className={className}>
+      <Link to={to} className={className} onClick={onClick}>
         {imgSrc ? (
           <img className="dash-menu-icon" src={imgSrc} alt="" aria-hidden="true" />
         ) : (
